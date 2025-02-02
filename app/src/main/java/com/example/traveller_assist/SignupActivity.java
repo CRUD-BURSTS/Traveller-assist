@@ -36,7 +36,6 @@ public class SignupActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.editTextEmail);
         editTextPassword = findViewById(R.id.editTextPassword);
         editTextConfirmPassword = findViewById(R.id.editTextConfirmPassword);
-        editTextPhone = findViewById(R.id.editTextPhone);
         autoCompleteLocation = findViewById(R.id.autoCompleteLocation);
         buttonSignup = findViewById(R.id.buttonSignup);
         textViewLogin = findViewById(R.id.textViewLogin);
@@ -75,7 +74,7 @@ public class SignupActivity extends AppCompatActivity {
         String location = autoCompleteLocation.getText().toString().trim();
 
         // Basic Validation
-        if (fullName.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || phone.isEmpty() || location.isEmpty()) {
+        if (fullName.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || location.isEmpty()) {
             Toast.makeText(this, "Please fill all fields!", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -95,8 +94,8 @@ public class SignupActivity extends AppCompatActivity {
         long result = dbHelper.insertUser(fullName, email, password, phone, location);
         if (result != -1) {
             Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
-            startActivity(intent);
+            //Intent intent = new Intent(SignupActivity.this, HomeActivity.class);
+            //startActivity(intent);
             finish();
         } else {
             Toast.makeText(this, "Error occurred. Please try again.", Toast.LENGTH_SHORT).show();

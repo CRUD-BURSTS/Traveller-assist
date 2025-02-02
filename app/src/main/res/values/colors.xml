@@ -5,12 +5,17 @@
 
 
     <color name="blue">#2196F3</color>
-    <color name="Navy">##000080</color>
+    <color name="Navy">#000080</color>
     <color name="primary">@color/blue</color>
     <color name="button_color">#18C0C1</color>
     <color name="text_primary">#202020</color>
     <color name="text_secondary">#757575</color>
     <color name="icon_tint">#ABABAB</color>
+
+    <color name="purple_500">#FF6200EE</color>
+    <color name="teal_700">#FF018786</color>
+
+
 
 
 
