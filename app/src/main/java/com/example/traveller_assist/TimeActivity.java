@@ -262,8 +262,8 @@ public class TimeActivity extends Activity {
         Button hotelsButton = findViewById(R.id.hotelsButton);
 
         backButton.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
-        nextButton.setOnClickListener(v -> startActivity(new Intent(this, HotelActivity.class)));
-        hotelsButton.setOnClickListener(v -> startActivity(new Intent(this, HotelActivity.class)));
+        nextButton.setOnClickListener(v -> startActivity(new Intent(this, HotelsListActivity.class)));
+        hotelsButton.setOnClickListener(v -> startActivity(new Intent(this, HotelsListActivity.class)));
     }
 
     private void checkLocationPermission() {
