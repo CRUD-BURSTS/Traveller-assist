@@ -200,7 +200,7 @@ public class TimeActivity extends Activity {
             }
         }
     }
-}*/
+}
 package com.example.traveller_assist;
 
 import android.app.Activity;
@@ -412,6 +412,351 @@ public class TimeActivity extends Activity {
                 Toast.makeText(this, "Permission denied! Location features won't work.",
                         Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+}
+*/
+
+package com.example.traveller_assist;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONObject;
+import java.io.IOException;
+
+public class TimeActivity extends Activity {
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
+    private static final int UPDATE_INTERVAL = 1000; // Update every sec
+
+    private TextView timeDisplay, locationText, currencyText;
+    private FusedLocationProviderClient fusedLocationClient;
+    private final OkHttpClient client = new OkHttpClient();
+    private Handler timeHandler;
+    private Runnable timeRunnable;
+
+    // API keys
+    private static final String TIMEZONE_API_KEY = "X49V22S53HU4";
+    private static final String CURRENCY_API_KEY = "c6d0485789178b4787c22f7a";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_time);
+
+        initializeViews();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        checkLocationPermission();
+    }
+
+    private void initializeViews() {
+        timeDisplay = findViewById(R.id.timeDisplay);
+        locationText = findViewById(R.id.location);
+        currencyText = findViewById(R.id.currency);
+        Button backButton = findViewById(R.id.backButton);
+        Button nextButton = findViewById(R.id.nextButton);
+        Button hotelsButton = findViewById(R.id.hotelsButton);
+
+        backButton.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
+        nextButton.setOnClickListener(v -> startActivity(new Intent(this, HotelsListActivity.class)));
+        hotelsButton.setOnClickListener(v -> startActivity(new Intent(this, HotelsListActivity.class)));
+    }
+
+    private void checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            getLastLocation();
+        }
+    }
+
+    private void getLastLocation() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null) {
+                            updateLocationInfo(location);
+                        } else {
+                            Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Error getting location", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    });
+        }
+    }
+
+    private void updateLocationInfo(Location location) {
+        try {
+            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            List<Address> addresses = geocoder.getFromLocation(
+                    location.getLatitude(), location.getLongitude(), 1);
+
+            if (!addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                String locationString = String.format("%s, %s",
+                        address.getLocality(),
+                        address.getCountryName());
+                locationText.setText(locationString);
+
+                getTimeZoneAndTime(location.getLatitude(), location.getLongitude());
+                getCurrencyForCountry(address.getCountryCode());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error getting location details", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void getTimeZoneAndTime(double latitude, double longitude) {
+        // Initialize handler for periodic updates
+        timeHandler = new Handler();
+        timeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateTime(latitude, longitude);
+                timeHandler.postDelayed(this, UPDATE_INTERVAL);
+            }
+        };
+
+        // Start periodic updates
+        timeHandler.post(timeRunnable);
+    }
+
+//   private void updateTime(double latitude, double longitude) {
+//        new Thread(() -> {
+//            try {
+//                String url = String.format("https://api.timezonedb.com/v2.1/get-time-zone?" +
+//                                "key=%s&format=json&by=position&lat=%f&lng=%f",
+//                        TIMEZONE_API_KEY, latitude, longitude);
+//
+//                Request request = new Request.Builder()
+//                        .url(url)
+//                        .addHeader("Accept", "application/json")
+//                        .build();
+//
+//                Response response = client.newCall(request).execute();
+//
+//                if (response.isSuccessful() && response.body() != null) {
+//                    JSONObject jsonResponse = new JSONObject(response.body().string());
+//
+//                    if (jsonResponse.getString("status").equals("OK")) {
+//                        String timezone = jsonResponse.getString("zoneName");
+//                        String formattedTime = jsonResponse.getString("formatted"); // Get formatted time directly from API
+//
+//                        // Parse the formatted time from API
+//                        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+//                        apiFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // API returns time in UTC
+//                        Date date = apiFormat.parse(formattedTime);
+//
+//                        // Format for display in local timezone
+//                        SimpleDateFormat displayFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+//                        displayFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+//                        String localTime = displayFormat.format(date);
+//
+//                        int gmtOffset = jsonResponse.getInt("gmtOffset"); // Get GMT offset in seconds
+//                        String gmtString = String.format("GMT%s%d:%02d",
+//                                gmtOffset >= 0 ? "+" : "-",
+//                                Math.abs(gmtOffset) / 3600,
+//                                (Math.abs(gmtOffset) % 3600) / 60);
+//
+//                        runOnUiThread(() -> {
+//                            timeDisplay.setText(localTime);
+//                            String timezoneInfo = timezone.replace("/", " / ") + " (" + gmtString + ")";
+//                            String currentLocation = locationText.getText().toString().split("\n")[0]; // Keep only the location part
+//                            locationText.setText(currentLocation + "\n" + timezoneInfo);
+//                        });
+//                    } else {
+//                        String errorMessage = jsonResponse.getString("message");
+//                        runOnUiThread(() -> Toast.makeText(TimeActivity.this,
+//                                "API Error: " + errorMessage, Toast.LENGTH_SHORT).show());
+//                    }
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                runOnUiThread(() -> Toast.makeText(TimeActivity.this,
+//                        "Failed to fetch timezone data", Toast.LENGTH_SHORT).show());
+//            }
+//        }).start();
+//    }
+
+
+    private void updateTime(double latitude, double longitude) {
+        new Thread(() -> {
+            try {
+                String url = String.format("https://api.timezonedb.com/v2.1/get-time-zone?" +
+                                "key=%s&format=json&by=position&lat=%f&lng=%f",
+                        TIMEZONE_API_KEY, latitude, longitude);
+
+                Request request = new Request.Builder()
+                        .url(url)
+                        .addHeader("Accept", "application/json")
+                        .build();
+
+                Response response = client.newCall(request).execute();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    JSONObject jsonResponse = new JSONObject(response.body().string());
+
+                    if (jsonResponse.getString("status").equals("OK")) {
+                        String timezone = jsonResponse.getString("zoneName");
+                        String formattedTime = jsonResponse.getString("formatted"); // Already in local time
+
+                        Log.d("TimeActivity", "Formatted Time from API: " + formattedTime);
+                        Log.d("TimeActivity", "Timezone: " + timezone);
+
+                        // Convert to display format
+                        SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                        apiFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+                        Date date = apiFormat.parse(formattedTime);
+
+                        SimpleDateFormat displayFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+                        String localTime = displayFormat.format(date);
+
+                        runOnUiThread(() -> {
+                            String currentLocation = locationText.getText().toString().split("\n")[0]; // Keep only the location part
+                            locationText.setText(currentLocation + "\n" + timezone.replace("/", " / ")); // Prevent duplication
+                            timeDisplay.setText(localTime);
+                        });
+
+                    } else {
+                        String errorMessage = jsonResponse.getString("message");
+                        runOnUiThread(() -> Toast.makeText(TimeActivity.this,
+                                "API Error: " + errorMessage, Toast.LENGTH_SHORT).show());
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> Toast.makeText(TimeActivity.this,
+                        "Failed to fetch timezone data", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+
+
+    private void getCurrencyForCountry(String countryCode) {
+        new Thread(() -> {
+            try {
+                String currencyCode = getCurrencyCode(countryCode);
+                if (currencyCode == null) {
+                    runOnUiThread(() -> currencyText.setText("Currency data unavailable"));
+                    return;
+                }
+
+                String url = String.format("https://v6.exchangerate-api.com/v6/%s/latest/USD",
+                        CURRENCY_API_KEY);
+
+                Request request = new Request.Builder()
+                        .url(url)
+                        .addHeader("Accept", "application/json")
+                        .build();
+
+                Response response = client.newCall(request).execute();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    JSONObject jsonResponse = new JSONObject(response.body().string());
+
+                    if (jsonResponse.has("conversion_rates")) {
+                        JSONObject rates = jsonResponse.getJSONObject("conversion_rates");
+
+                        if (rates.has(currencyCode)) {
+                            double exchangeRate = rates.getDouble(currencyCode);
+                            runOnUiThread(() -> currencyText.setText(
+                                    String.format("Currency: %s (1 USD = %.2f %s)",
+                                            currencyCode, exchangeRate, currencyCode)
+                            ));
+                        } else {
+                            runOnUiThread(() -> currencyText.setText("Currency data unavailable"));
+                        }
+                    }
+                } else {
+                    runOnUiThread(() -> Toast.makeText(this,
+                            "Currency API Error", Toast.LENGTH_SHORT).show());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> Toast.makeText(this,
+                        "Failed to fetch currency data", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    private String getCurrencyCode(String countryCode) {
+        switch (countryCode) {
+            case "US": return "USD";
+            case "LK": return "LKR";
+            case "IN": return "INR";
+            case "GB": return "GBP";
+            case "JP": return "JPY";
+            case "AU": return "AUD";
+            case "EU": return "EUR";
+            case "CA": return "CAD";
+            case "CN": return "CNY";
+            default: return null;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLastLocation();
+            } else {
+                Toast.makeText(this, "Permission denied! Location features won't work.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (timeHandler != null && timeRunnable != null) {
+            timeHandler.removeCallbacks(timeRunnable);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (timeHandler != null && timeRunnable != null) {
+            timeHandler.removeCallbacks(timeRunnable);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (timeHandler != null && timeRunnable != null) {
+            timeHandler.post(timeRunnable);
         }
     }
 }
