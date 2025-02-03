@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@drawable/bg_time">
 
     <!-- Hotel Image -->
     <ImageView
@@ -26,6 +27,7 @@
         android:layout_marginTop="16dp"
         android:text="Hotel Serenity"
         android:textSize="24sp"
+        android:textColor="@color/black"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,9 +41,10 @@
         android:layout_marginTop="8dp"
         android:text="123 Main Street, City, Country"
         android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
+        android:textColor="@android:color/black"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+
         app:layout_constraintTop_toBottomOf="@+id/hotelNameTextView" />
 
     <!-- Hotel Description -->
@@ -52,6 +55,7 @@
         android:layout_marginTop="16dp"
         android:text="This is a sample hotel description. It offers luxurious amenities, breathtaking views, and world-class service."
         android:textSize="16sp"
+        android:textColor="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/hotelAddressTextView" />

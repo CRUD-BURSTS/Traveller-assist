@@ -22,20 +22,6 @@ public class HotelDetailsActivity extends AppCompatActivity {
 
         // Get data passed from HotelsListActivity
         Intent intent = getIntent();
-        if (intent != null) {
-            String hotelName = intent.getStringExtra("hotelName");
-            String hotelAddress = intent.getStringExtra("hotelAddress");
-            String hotelDescription = intent.getStringExtra("hotelDescription");
-            int hotelImageResId = intent.getIntExtra("hotelImageResId", R.drawable.hotel_placeholder);
-            int mapImageResId = intent.getIntExtra("mapImageResId", R.drawable.map_placeholder);
-
-            // Set data to views
-            hotelNameTextView.setText(hotelName);
-            hotelAddressTextView.setText(hotelAddress);
-            hotelDescriptionTextView.setText(hotelDescription);
-            hotelImageView.setImageResource(hotelImageResId);
-            googleMapImageView.setImageResource(mapImageResId);
-        }
 
         // Enable the back button in the action bar
         if (getSupportActionBar() != null) {

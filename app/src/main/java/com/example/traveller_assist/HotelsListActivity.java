@@ -24,9 +24,7 @@ public class HotelsListActivity extends AppCompatActivity {
                 Intent intent = new Intent(HotelsListActivity.this, HotelDetailsActivity.class);
 
                 // Optionally, pass data to the HotelDetailsActivity using intent extras
-                intent.putExtra("hotelName", "Sample Hotel Name");
-                intent.putExtra("hotelDescription", "This is a sample hotel description.");
-                intent.putExtra("hotelImageResId", R.drawable.hotel_placeholder); // Replace with your image resource ID
+
 
                 // Start the HotelDetailsActivity
                 startActivity(intent);
